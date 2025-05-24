@@ -17,7 +17,7 @@ export default function LoginPage() {
     try {
       const { token } = await apiLogin(email, password);
       login(token);
-      navigate('/profile');
+      navigate('/dashboard'); // изменено с /profile на /dashboard
     } catch (err) {
       setError(err);
       console.error('LoginPage error:', err);
