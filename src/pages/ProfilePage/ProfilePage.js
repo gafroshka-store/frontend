@@ -74,12 +74,21 @@ export default function ProfilePage() {
 
   if (!user) return <div style={{ padding: 32 }}>Загрузка...</div>;
 
+  const handleCreateAnnouncement = () => {
+    navigate('/announcement/create');
+  };
+
   return (
     <div className="profile-container">
       <div className="profile-card">
         <h2 className="profile-title">Профиль пользователя</h2>
         {error && <div className="profile-error">{error}</div>}
         {success && <div className="profile-success">{success}</div>}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <button onClick={handleCreateAnnouncement} className="profile-create-announcement-btn">
+            Создать товар
+          </button>
+        </div>
         {!edit ? (
           <>
             <div><b>Имя:</b> {user.name}</div>

@@ -1,0 +1,103 @@
+.create-announcement-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8ffae 0%, #43cea2 100%);
+  padding: 1rem;
+}
+
+.create-announcement-form {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 440px;
+}
+
+.create-announcement-form h2 {
+  text-align: center;
+  color: #185a9d;
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  margin-bottom: 1.2rem;
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.input-group textarea {
+  resize: vertical;
+}
+
+.input-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5em;
+}
+
+.error-message {
+  color: #e53e3e;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #fff5f5;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.success-message {
+  color: #38a169;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #f0fff4;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.create-announcement-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #43cea2;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.create-announcement-button:disabled {
+  background: #b2dfdb;
+  cursor: not-allowed;
+}
+
+.create-announcement-button:hover:not(:disabled) {
+  background: #185a9d;
+}
+
+@media (max-width: 480px) {
+  .create-announcement-form {
+    padding: 1rem;
+    max-width: none;
+    border-radius: 0.5rem;
+  }
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    font-size: 0.95rem;
+  }
+  .create-announcement-button {
+    font-size: 0.95rem;
+    padding: 0.65rem;
+  }
+}

@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage/LoginPage';
 import Dashboard from './pages/Dashboard';
+import CreateAnnouncementPage from './pages/Announcement/CreateAnnouncementPage';
 
 const PrivateRoute = ({ children }) => {
   const { token } = useAuth();
@@ -17,6 +18,14 @@ export default function AppRoutes() {
         element={
           <PrivateRoute>
             <Dashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/announcement/create"
+        element={
+          <PrivateRoute>
+            <CreateAnnouncementPage />
           </PrivateRoute>
         }
       />
