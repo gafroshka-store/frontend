@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { register as apiRegister } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import './RegisterPage.css';
+import logo from '../../assets/gafroshka-logo.png';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -60,7 +61,18 @@ export default function RegisterPage() {
 
   return (
     <div className="register-container">
+      <div className="register-bg-logo">
+        <img src={logo} alt="" aria-hidden="true" />
+      </div>
       <form onSubmit={handleSubmit} className="register-form">
+        <div className="login-logo-container">
+          <img
+            src={logo}
+            alt="Gafroshka Store"
+            className="login-logo"
+          />
+        </div>
+        <div className="login-brand-title">GAFROSHKA-STORE</div>
         <h2>Регистрация</h2>
         {error && <div className="error-message">{error}</div>}
 

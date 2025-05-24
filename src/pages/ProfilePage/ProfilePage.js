@@ -4,6 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './ProfilePage.css';
 
+function getInitials(name, surname) {
+  if (!name && !surname) return '👤';
+  return (
+    (name ? name[0] : '') +
+    (surname ? surname[0] : '')
+  ).toUpperCase();
+}
+
 export default function ProfilePage() {
   const { token, userId, logout } = useAuth();
   const [user, setUser] = useState(null);
@@ -25,7 +33,6 @@ export default function ProfilePage() {
           surname: res.data.surname || '',
           email: res.data.email || '',
           phone_number: res.data.phone_number || '',
-          // day_of_birth не включаем в форму для редактирования
         });
       })
       .catch(err => {
@@ -48,14 +55,12 @@ export default function ProfilePage() {
       if (form.surname !== user.surname) patchData.surname = form.surname;
       if (form.email !== user.email) patchData.email = form.email;
       if (form.phone_number !== user.phone_number) patchData.phone_number = form.phone_number;
-      // day_of_birth не отправляем
 
       await axios.put(
         `/api/user/${userId}`,
         patchData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Получить обновлённые данные
       const res = await axios.get(`/api/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -81,56 +86,109 @@ export default function ProfilePage() {
   return (
     <div className="profile-container">
       <div className="profile-card">
-        <h2 className="profile-title">Профиль пользователя</h2>
+        {/* Логотип и бренд удалены */}
+        {/* Аватар */}
+        <div>
+          <div className="profile-avatar" style={{
+            background: 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '2.5rem',
+            fontWeight: 700,
+            marginBottom: 0
+          }}>
+            {getInitials(user.name, user.surname)}
+          </div>
+        </div>
+        <h2 className="profile-title">{user.name} {user.surname}</h2>
+        <div className="profile-subtitle">{user.email}</div>
         {error && <div className="profile-error">{error}</div>}
         {success && <div className="profile-success">{success}</div>}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
           <button onClick={handleCreateAnnouncement} className="profile-create-announcement-btn">
             Создать товар
           </button>
         </div>
         {!edit ? (
-          <>
-            <div><b>Имя:</b> {user.name}</div>
-            <div><b>Фамилия:</b> {user.surname}</div>
-            <div><b>Email:</b> {user.email}</div>
-            <div><b>Телефон:</b> {user.phone_number}</div>
-            <div>
-              <b>Дата рождения:</b>{' '}
-              {user.day_of_birth && !user.day_of_birth.startsWith('0001-01-01')
-                ? user.day_of_birth.slice(0, 10)
-                : ''}
-            </div>
-            <div><b>Пол:</b> {user.sex === true ? 'Мужской' : user.sex === false ? 'Женский' : ''}</div>
-            <div><b>Дата регистрации:</b> {user.registration_date && user.registration_date.slice(0, 10)}</div>
-            <div><b>Баланс:</b> {user.balance}</div>
-            <div><b>Сделок:</b> {user.deals_count}</div>
-            <div><b>Рейтинг:</b> {user.rating} ({user.rating_count})</div>
-            <div className="profile-actions">
-              <button onClick={() => setEdit(true)}>Редактировать</button>
-              <button onClick={handleLogout} style={{ marginLeft: 10 }}>Выйти</button>
-            </div>
-          </>
+          <ul className="profile-info-list">
+            <li>
+              <span className="profile-info-label">Телефон:</span>
+              <span className="profile-info-value">{user.phone_number}</span>
+            </li>
+            <li>
+              <span className="profile-info-label">Дата рождения:</span>
+              <span className="profile-info-value">
+                {user.day_of_birth && !user.day_of_birth.startsWith('0001-01-01')
+                  ? user.day_of_birth.slice(0, 10)
+                  : ''}
+              </span>
+            </li>
+            <li>
+              <span className="profile-info-label">Пол:</span>
+              <span className="profile-info-value">
+                {user.sex === true ? 'Мужской' : user.sex === false ? 'Женский' : ''}
+              </span>
+            </li>
+            <li>
+              <span className="profile-info-label">Дата регистрации:</span>
+              <span className="profile-info-value">
+                {user.registration_date && user.registration_date.slice(0, 10)}
+              </span>
+            </li>
+            <li>
+              <span className="profile-info-label">Баланс:</span>
+              <span className="profile-info-value">{user.balance}</span>
+            </li>
+            <li>
+              <span className="profile-info-label">Сделок:</span>
+              <span className="profile-info-value">{user.deals_count}</span>
+            </li>
+            <li>
+              <span className="profile-info-label">Рейтинг:</span>
+              <span className="profile-info-value">
+                {user.rating} <span style={{ color: '#f6c700' }}>★</span> ({user.rating_count})
+              </span>
+            </li>
+          </ul>
         ) : (
           <form onSubmit={handleSave} className="profile-form">
             <div>
-              <label>Имя: <input name="name" value={form.name} onChange={handleChange} required /></label>
+              <label>
+                Имя:
+                <input name="name" value={form.name} onChange={handleChange} required />
+              </label>
             </div>
             <div>
-              <label>Фамилия: <input name="surname" value={form.surname} onChange={handleChange} /></label>
+              <label>
+                Фамилия:
+                <input name="surname" value={form.surname} onChange={handleChange} />
+              </label>
             </div>
             <div>
-              <label>Email: <input name="email" value={form.email} onChange={handleChange} required /></label>
+              <label>
+                Email:
+                <input name="email" value={form.email} onChange={handleChange} required />
+              </label>
             </div>
             <div>
-              <label>Телефон: <input name="phone_number" value={form.phone_number} onChange={handleChange} required /></label>
+              <label>
+                Телефон:
+                <input name="phone_number" value={form.phone_number} onChange={handleChange} required />
+              </label>
             </div>
-            {/* day_of_birth не редактируется */}
             <div className="profile-actions">
               <button type="submit">Сохранить</button>
-              <button type="button" onClick={() => setEdit(false)} style={{ marginLeft: 10 }}>Отмена</button>
+              <button type="button" onClick={() => setEdit(false)} style={{ background: '#bdbdbd' }}>Отмена</button>
             </div>
           </form>
+        )}
+        {!edit && (
+          <div className="profile-actions">
+            <button onClick={() => setEdit(true)}>Редактировать</button>
+            <button onClick={handleLogout} style={{ background: '#e53e3e' }}>Выйти</button>
+          </div>
         )}
       </div>
     </div>

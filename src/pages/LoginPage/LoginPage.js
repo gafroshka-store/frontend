@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { login as apiLogin } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import './LoginPage.css';
+import logo from '../../assets/gafroshka-logo.png';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -27,6 +28,14 @@ export default function LoginPage() {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
+        <div className="login-logo-container">
+          <img
+            src={logo}
+            alt="Gafroshka Store"
+            className="login-logo"
+          />
+        </div>
+        <div className="login-brand-title">GAFROSHKA-STORE</div>
         <h2>Вход в систему</h2>
         {error && <div className="error-message">{error}</div>}
 
