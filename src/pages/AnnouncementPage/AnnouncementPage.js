@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [form, setForm] = useState({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [authorInfoMap, setAuthorInfoMap] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +39,22 @@ export default function ProfilePage() {
       .catch(err => {
         setError('Ошибка загрузки профиля');
       });
+  }, [userId, token]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const fetchAuthorInfo = async () => {
+      try {
+        const response = await axios.get(`/api/user/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAuthorInfoMap(prev => ({ ...prev, [userId]: response.data }));
+      } catch (err) {
+        console.error('Ошибка загрузки информации об авторе:', err);
+      }
+    };
+
+    fetchAuthorInfo();
   }, [userId, token]);
 
   const handleChange = e => {

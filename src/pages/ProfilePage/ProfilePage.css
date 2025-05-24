@@ -154,6 +154,10 @@
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
 }
 
+.profile-to-dashboard-btn {
+  margin-right: 0.5rem;
+}
+
 @media (max-width: 600px) {
   .profile-card {
     padding: 1rem;

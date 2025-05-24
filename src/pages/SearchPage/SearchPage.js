@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Dashboard.css';
+import { useNavigate, useLocation } from 'react-router-dom';
+import '../Dashboard.css';
 
 const categoryMap = {
   1: 'Электроника',
@@ -12,86 +12,48 @@ const categoryMap = {
   7: 'Другое'
 };
 
-export default function Dashboard() {
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const navigate = useNavigate();
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
-  const fetchTop = () => {
-    setLoading(true);
-    console.log('[Dashboard] GET /api/announcements/top/10');
-    fetch('/api/announcements/top/10')
-      .then(res => {
-        console.log('[Dashboard] Response status:', res.status);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        console.log('[Dashboard] Data:', data);
-        setAnnouncements(data);
-      })
-      .catch(err => {
-        setError('Ошибка загрузки товаров');
-        console.error('[Dashboard] Ошибка загрузки топ-10 товаров:', err);
-      })
-      .finally(() => setLoading(false));
-  };
+export default function SearchPage() {
+  const navigate = useNavigate();
+  const query = useQuery().get('q') || '';
+  const [results, setResults] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchTop();
-  }, []);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    const term = search.trim();
-    if (term) {
-      navigate(`/search?q=${encodeURIComponent(term)}`);
-    }
-  };
+    if (!query) return;
+    setError('');
+    setLoading(true);
+    console.log('[SearchPage] GET /api/announcements/search?q=' + encodeURIComponent(query));
+    fetch(`/api/announcements/search?q=${encodeURIComponent(query)}`)
+      .then(res => res.json())
+      .then(data => setResults(Array.isArray(data) ? data : []))
+      .catch(err => {
+        setError('Ошибка поиска');
+        console.error('[SearchPage] Ошибка поиска:', err);
+      })
+      .finally(() => setLoading(false));
+  }, [query]);
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <form onSubmit={handleSearchSubmit} className="dashboard-search-form">
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Поиск товаров..."
-            className="dashboard-search-input"
-          />
-          <button type="submit" className="dashboard-search-btn">🔍</button>
-        </form>
-        <button
-          className="dashboard-create-btn"
-          onClick={() => navigate('/announcement/create')}
-        >
-          + Новый товар
-        </button>
-        <button
-          className="dashboard-refresh-btn"
-          onClick={fetchTop}
-          title="Обновить список"
-        >
-          ⟳
-        </button>
-        <button
-          className="dashboard-profile-btn"
-          onClick={() => navigate('/profile')}
-        >
-          Профиль
-        </button>
+        <button className="dashboard-profile-btn" onClick={() => navigate('/profile')}>Профиль</button>
+        <button className="dashboard-create-btn" onClick={() => navigate('/announcement/create')}>+ Новый товар</button>
+        <button className="dashboard-profile-btn" onClick={() => navigate('/dashboard')}>Топ-10</button>
+        <button className="dashboard-profile-btn" onClick={() => navigate(-1)}>Назад</button>
       </div>
-
-      <h1 className="dashboard-title">Топ-10 товаров</h1>
-
+      <h1 className="dashboard-title">Результаты поиска</h1>
+      <div style={{ textAlign: 'center', marginBottom: 24, color: '#185a9d', fontSize: 18 }}>
+        {query && <>По запросу: <b>{query}</b></>}
+      </div>
       {loading && <div className="dashboard-loading">Пожалуйста, ожидайте...</div>}
       {error && <div className="dashboard-error">{error}</div>}
-
       <div className="dashboard-list">
-        {announcements.map(a => {
+        {results.map(a => {
           const hasDiscount = a.discount > 0;
           const discountedPrice = hasDiscount
             ? Math.round(a.price * (1 - a.discount / 100))

@@ -6,9 +6,12 @@ import RegisterPage from './pages/RegisterPage/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import CreateAnnouncementPage from './pages/Announcement/CreateAnnouncementPage';
+import AnnouncementPage from './pages/Announcement/AnnouncementPage';
+import EditAnnouncementPage from './pages/Announcement/EditAnnouncementPage';
+import SearchPage from './pages/SearchPage/SearchPage';
+import MyAnnouncementsPage from './pages/Announcement/MyAnnouncementsPage';
 
 function PrivateRoute({ children }) {
-  // Простой PrivateRoute для App.js
   const token = sessionStorage.getItem('jwt');
   return token ? children : <LoginPage />;
 }
@@ -30,6 +33,17 @@ export default function App() {
           />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/announcement/create" element={<CreateAnnouncementPage />} />
+          <Route path="/announcement/:id" element={<AnnouncementPage />} />
+          <Route path="/announcement/:id/edit" element={<EditAnnouncementPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route
+            path="/my-announcements"
+            element={
+              <PrivateRoute>
+                <MyAnnouncementsPage />
+              </PrivateRoute>
+            }
+          />
           <Route path="*" element={<LoginPage />} />
         </Routes>
       </AuthProvider>
