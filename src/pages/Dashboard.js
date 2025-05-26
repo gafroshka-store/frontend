@@ -21,8 +21,14 @@ export default function Dashboard() {
 
   const fetchTop = () => {
     setLoading(true);
-    console.log('[Dashboard] GET /api/announcements/top/10');
-    fetch('/api/announcements/top/10')
+    console.log('[Dashboard] POST /api/announcements/top {limit: 20}');
+    fetch('/api/announcements/top', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ limit: 20 })
+    })
       .then(res => {
         console.log('[Dashboard] Response status:', res.status);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -34,7 +40,7 @@ export default function Dashboard() {
       })
       .catch(err => {
         setError('Ошибка загрузки товаров');
-        console.error('[Dashboard] Ошибка загрузки топ-10 товаров:', err);
+        console.error('[Dashboard] Ошибка загрузки топ-товаров:', err);
       })
       .finally(() => setLoading(false));
   };
@@ -91,54 +97,60 @@ export default function Dashboard() {
       {error && <div className="dashboard-error">{error}</div>}
 
       <div className="dashboard-list">
-        {announcements.map(a => {
-          const hasDiscount = a.discount > 0;
-          const discountedPrice = hasDiscount
-            ? Math.round(a.price * (1 - a.discount / 100))
-            : a.price;
-          return (
-            <div className="dashboard-card" key={a.id}>
-              <div className="dashboard-card-header">
-                <span className="dashboard-card-title">{a.name}</span>
-                <span className="dashboard-card-price">
-                  {hasDiscount ? (
-                    <>
-                      <span style={{ textDecoration: 'line-through', color: '#888', marginRight: 8 }}>
-                        {a.price} ₽
-                      </span>
-                      <span style={{ color: '#43cea2', fontWeight: 700 }}>
-                        {discountedPrice} ₽
-                      </span>
-                    </>
-                  ) : (
-                    <span>{a.price} ₽</span>
-                  )}
-                </span>
+        {Array.isArray(announcements) && announcements.length > 0 ? (
+          announcements.map(a => {
+            const hasDiscount = a.discount > 0;
+            const discountedPrice = hasDiscount
+              ? Math.round(a.price * (1 - a.discount / 100))
+              : a.price;
+            return (
+              <div className="dashboard-card" key={a.id}>
+                <div className="dashboard-card-header">
+                  <span className="dashboard-card-title">{a.name}</span>
+                  <span className="dashboard-card-price">
+                    {hasDiscount ? (
+                      <>
+                        <span style={{ textDecoration: 'line-through', color: '#888', marginRight: 8 }}>
+                          {a.price} ₽
+                        </span>
+                        <span style={{ color: '#43cea2', fontWeight: 700 }}>
+                          {discountedPrice} ₽
+                        </span>
+                      </>
+                    ) : (
+                      <span>{a.price} ₽</span>
+                    )}
+                  </span>
+                </div>
+                <div className="dashboard-card-desc">{a.description}</div>
+                <div className="dashboard-card-meta">
+                  <span>Категория: {categoryMap[a.category] || a.category}</span>
+                  <span>Скидка: {a.discount}%</span>
+                </div>
+                <div className="dashboard-card-meta">
+                  <span>Рейтинг: {a.rating} ★</span>
+                  <span>Оценок: {a.rating_count}</span>
+                </div>
+                <div className="dashboard-card-date">
+                  Добавлено: {a.created_at ? a.created_at.slice(0, 10) : ''}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button
+                    className="dashboard-profile-btn"
+                    style={{ background: '#667eea' }}
+                    onClick={() => navigate(`/announcement/${a.id}`)}
+                  >
+                    Отзывы
+                  </button>
+                </div>
               </div>
-              <div className="dashboard-card-desc">{a.description}</div>
-              <div className="dashboard-card-meta">
-                <span>Категория: {categoryMap[a.category] || a.category}</span>
-                <span>Скидка: {a.discount}%</span>
-              </div>
-              <div className="dashboard-card-meta">
-                <span>Рейтинг: {a.rating} ★</span>
-                <span>Оценок: {a.rating_count}</span>
-              </div>
-              <div className="dashboard-card-date">
-                Добавлено: {a.created_at ? a.created_at.slice(0, 10) : ''}
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button
-                  className="dashboard-profile-btn"
-                  style={{ background: '#667eea' }}
-                  onClick={() => navigate(`/announcement/${a.id}`)}
-                >
-                  Отзывы
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div style={{ padding: 32, color: '#888', textAlign: 'center' }}>
+            Нет товаров
+          </div>
+        )}
       </div>
     </div>
   );

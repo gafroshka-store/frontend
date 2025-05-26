@@ -10,6 +10,7 @@ import AnnouncementPage from './pages/Announcement/AnnouncementPage';
 import EditAnnouncementPage from './pages/Announcement/EditAnnouncementPage';
 import SearchPage from './pages/SearchPage/SearchPage';
 import MyAnnouncementsPage from './pages/Announcement/MyAnnouncementsPage';
+import UserProfilePage from './pages/UserProfilePage';
 
 function PrivateRoute({ children }) {
   const token = sessionStorage.getItem('jwt');
@@ -44,6 +45,7 @@ export default function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/user/:id" element={<UserProfilePage />} />
           <Route path="*" element={<LoginPage />} />
         </Routes>
       </AuthProvider>

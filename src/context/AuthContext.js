@@ -1,6 +1,6 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Вспомогательная функция для декодирования JWT
+// Ваша parseJwt остаётся без изменений
 function parseJwt(token) {
   if (!token) return {};
   try {
@@ -20,6 +20,12 @@ function parseJwt(token) {
 
 const AuthContext = createContext();
 
+/**
+ * AuthProvider, который:
+ * - Хранит токен в state
+ * - Подхватывает изменения sessionStorage из любых вкладок
+ * - Обновляет userId при любом изменении токена
+ */
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => sessionStorage.getItem('jwt'));
   const [userId, setUserId] = useState(() => {
@@ -27,18 +33,36 @@ export const AuthProvider = ({ children }) => {
     return t ? parseJwt(t).id : null;
   });
 
-  const login = (newToken) => {
+  // Обновляем userId при изменении token
+  useEffect(() => {
+    if (token) {
+      setUserId(parseJwt(token).id || null);
+    } else {
+      setUserId(null);
+    }
+  }, [token]);
+
+  // Слушаем событие storage на случай изменений в других вкладках
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === 'jwt') {
+        setToken(e.newValue);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Обёрнутые login/logout, чтобы всегда идти через React state
+  const login = useCallback((newToken) => {
     sessionStorage.setItem('jwt', newToken);
     setToken(newToken);
-    const payload = parseJwt(newToken);
-    setUserId(payload.id || null);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     sessionStorage.removeItem('jwt');
     setToken(null);
-    setUserId(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ token, userId, login, logout }}>
@@ -47,4 +71,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// Хук остаётся прежним
 export const useAuth = () => useContext(AuthContext);

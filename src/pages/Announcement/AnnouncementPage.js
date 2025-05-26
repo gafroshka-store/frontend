@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import './AnnouncementPage.css';
@@ -27,6 +27,12 @@ export default function AnnouncementPage() {
   const [reviewSuccess, setReviewSuccess] = useState('');
   const [loading, setLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [editingReviewText, setEditingReviewText] = useState('');
+  const [editingReviewRating, setEditingReviewRating] = useState(5);
+  const [editingReviewError, setEditingReviewError] = useState('');
+  const [editingReviewLoading, setEditingReviewLoading] = useState(false);
+  const [reviewAuthors, setReviewAuthors] = useState({});
   const navigate = useNavigate();
 
   // Получение товара
@@ -46,7 +52,31 @@ export default function AnnouncementPage() {
     if (!id) return;
     setReviewsLoading(true);
     axios.get(`/api/feedback/announcement/${id}`)
-      .then(res => setReviews(Array.isArray(res.data) ? res.data : []))
+      .then(async res => {
+        const reviewsArr = Array.isArray(res.data) ? res.data : [];
+        setReviews(reviewsArr);
+
+        // Получаем уникальные user_writer_id
+        const uniqueWriterIds = [
+          ...new Set(reviewsArr.map(r => r.user_writer_id).filter(Boolean))
+        ];
+        // Для каждого user_writer_id, если его нет в reviewAuthors, делаем запрос
+        const missingIds = uniqueWriterIds.filter(uid => !(uid in reviewAuthors));
+        if (missingIds.length > 0) {
+          const promises = missingIds.map(uid =>
+            axios.get(`/api/user/${uid}`).then(
+              resp => ({ id: uid, name: resp.data.name, surname: resp.data.surname }),
+              () => ({ id: uid, name: '', surname: '' })
+            )
+          );
+          const authors = await Promise.all(promises);
+          setReviewAuthors(prev => {
+            const next = { ...prev };
+            authors.forEach(a => { next[a.id] = a; });
+            return next;
+          });
+        }
+      })
       .catch(err => {
         setReviews([]);
         console.error('[AnnouncementPage] Ошибка загрузки отзывов:', err);
@@ -66,6 +96,17 @@ export default function AnnouncementPage() {
     setReviewSuccess('');
     setReviewLoading(true);
     try {
+      // Проверка и заполнение id
+      if (!id) {
+        setReviewError('Ошибка: не найден id объявления');
+        setReviewLoading(false);
+        return;
+      }
+      if (!userId) {
+        setReviewError('Ошибка: не найден id пользователя');
+        setReviewLoading(false);
+        return;
+      }
       const payload = {
         announcement_id: id,
         user_writer_id: userId,
@@ -82,7 +123,13 @@ export default function AnnouncementPage() {
       setReviewSuccess('Отзыв добавлен!');
       fetchReviews();
     } catch (err) {
-      setReviewError('Ошибка добавления отзыва');
+      if (err.response && err.response.data && err.response.data.message) {
+        setReviewError(err.response.data.message);
+      } else if (err.response && typeof err.response.data === 'string') {
+        setReviewError(err.response.data);
+      } else {
+        setReviewError('Ошибка добавления отзыва');
+      }
       console.error('[AnnouncementPage] Ошибка добавления отзыва:', err);
     } finally {
       setReviewLoading(false);
@@ -101,6 +148,55 @@ export default function AnnouncementPage() {
     } catch (err) {
       alert('Ошибка удаления отзыва');
       console.error('[AnnouncementPage] Ошибка удаления отзыва:', err);
+    }
+  };
+
+  // Начать редактирование отзыва
+  const handleEditReview = (review) => {
+    setEditingReviewId(review.id);
+    setEditingReviewText(review.comment);
+    setEditingReviewRating(review.rating);
+    setEditingReviewError('');
+  };
+
+  // Отмена редактирования
+  const handleCancelEditReview = () => {
+    setEditingReviewId(null);
+    setEditingReviewText('');
+    setEditingReviewRating(5);
+    setEditingReviewError('');
+  };
+
+  // Сохранить изменения отзыва
+  const handleUpdateReview = async (e) => {
+    e.preventDefault();
+    setEditingReviewError('');
+    setEditingReviewLoading(true);
+    try {
+      // Используем PATCH вместо PUT
+      await axios.patch(
+        `/api/feedback/${editingReviewId}`,
+        {
+          comment: editingReviewText,
+          rating: editingReviewRating,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setEditingReviewId(null);
+      setEditingReviewText('');
+      setEditingReviewRating(5);
+      fetchReviews();
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setEditingReviewError(err.response.data.message);
+      } else if (err.response && typeof err.response.data === 'string') {
+        setEditingReviewError(err.response.data);
+      } else {
+        setEditingReviewError('Ошибка обновления отзыва');
+      }
+      console.error('[AnnouncementPage] Ошибка обновления отзыва:', err);
+    } finally {
+      setEditingReviewLoading(false);
     }
   };
 
@@ -146,12 +242,7 @@ export default function AnnouncementPage() {
         <div className="announcement-view-date">
           Добавлено: {announcement.created_at ? announcement.created_at.slice(0, 10) : ''}
         </div>
-        <button
-          className="announcement-edit-btn"
-          onClick={() => navigate(`/announcement/${id}/edit`)}
-        >
-          Редактировать
-        </button>
+        {/* Кнопка редактирования товара удалена */}
         {/* Отзывы */}
         <div className="reviews-section">
           <h3>Отзывы</h3>
@@ -165,26 +256,80 @@ export default function AnnouncementPage() {
                     <li key={r.id} className="review-item">
                       <div className="review-header">
                         <span className="review-author">
-                          {r.user_name || r.user_writer_name || ''} {r.user_surname || r.user_writer_surname || ''}
+                          {/* Имя и фамилия автора отзыва как ссылка на профиль */}
+                          {reviewAuthors[r.user_writer_id]
+                            ? (
+                              <Link
+                                to={`/user/${r.user_writer_id}`}
+                                style={{ color: '#185a9d', textDecoration: 'underline', cursor: 'pointer' }}
+                              >
+                                {`${reviewAuthors[r.user_writer_id].name || ''} ${reviewAuthors[r.user_writer_id].surname || ''}`.trim()}
+                              </Link>
+                            )
+                            : ''}
                         </span>
                         <span className="review-rating">{r.rating} ★</span>
-                        {userId === r.user_writer_id && (
-                          <button
-                            className="review-delete-btn"
-                            onClick={() => handleDeleteReview(r.id)}
-                            title="Удалить отзыв"
-                          >✕</button>
+                        {userId === r.user_writer_id && editingReviewId !== r.id && (
+                          <>
+                            <button
+                              className="review-delete-btn"
+                              onClick={() => handleDeleteReview(r.id)}
+                              title="Удалить отзыв"
+                            >✕</button>
+                            <button
+                              className="review-delete-btn"
+                              style={{ color: '#185a9d' }}
+                              onClick={() => handleEditReview(r)}
+                              title="Редактировать отзыв"
+                            >✎</button>
+                          </>
                         )}
                       </div>
-                      <div className="review-text">{r.comment}</div>
-                      <div className="review-date">{r.created_at ? r.created_at.slice(0, 16).replace('T', ' ') : ''}</div>
+                      {editingReviewId === r.id ? (
+                        <form className="review-form" onSubmit={handleUpdateReview}>
+                          <textarea
+                            value={editingReviewText}
+                            onChange={e => setEditingReviewText(e.target.value)}
+                            required
+                            rows={2}
+                            maxLength={500}
+                          />
+                          <div className="review-form-bottom">
+                            <label>
+                              Оценка:&nbsp;
+                              <select
+                                value={editingReviewRating}
+                                onChange={e => setEditingReviewRating(Number(e.target.value))}
+                              >
+                                {[5, 4, 3, 2, 1].map(n => (
+                                  <option key={n} value={n}>{n} ★</option>
+                                ))}
+                              </select>
+                            </label>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button type="submit" disabled={editingReviewLoading || !editingReviewText.trim()}>
+                                {editingReviewLoading ? 'Сохранение...' : 'Сохранить'}
+                              </button>
+                              <button type="button" onClick={handleCancelEditReview} style={{ background: '#bdbdbd' }}>
+                                Отмена
+                              </button>
+                            </div>
+                          </div>
+                          {editingReviewError && <div className="review-error">{editingReviewError}</div>}
+                        </form>
+                      ) : (
+                        <>
+                          <div className="review-text">{r.comment}</div>
+                          <div className="review-date">{r.created_at ? r.created_at.slice(0, 16).replace('T', ' ') : ''}</div>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>
               )
           }
           {/* Добавить отзыв */}
-          {token && (
+          {token && !editingReviewId && (
             <form className="review-form" onSubmit={handleReviewSubmit}>
               <textarea
                 value={reviewText}
