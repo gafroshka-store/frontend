@@ -23,20 +23,41 @@ export default function UserProfilePage() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!id) return;
+  // Функция для обновления профиля пользователя
+  const fetchUser = () => {
     axios.get(`/api/user/${id}`)
       .then(res => setUser(res.data))
       .catch(() => setError('Ошибка загрузки профиля пользователя'));
+  };
+
+  useEffect(() => {
+    if (!id) return;
+    fetchUser();
   }, [id]);
 
   // Получение отзывов на пользователя
   const fetchFeedbacks = () => {
     setFeedbackLoading(true);
     setFeedbackError('');
-    axios.get(`/api/feedback/user/${id}`)
-      .then(res => setFeedbacks(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setFeedbackError('Ошибка загрузки отзывов о пользователе'))
+    axios.get(`/api/user/feedback/user/${id}`)
+      .then(res => {
+        // Корректная обработка: если массив, то используем, иначе []
+        if (Array.isArray(res.data)) {
+          setFeedbacks(res.data);
+        } else if (res.data && typeof res.data === 'object' && Array.isArray(res.data.feedbacks)) {
+          setFeedbacks(res.data.feedbacks);
+        } else {
+          setFeedbacks([]);
+        }
+      })
+      .catch((err) => {
+        // Показываем ошибку только если это действительно ошибка сети/сервера
+        if (err.response && err.response.status === 404) {
+          setFeedbacks([]);
+        } else {
+          setFeedbackError('Ошибка загрузки отзывов о пользователе');
+        }
+      })
       .finally(() => setFeedbackLoading(false));
   };
 
@@ -53,7 +74,7 @@ export default function UserProfilePage() {
     setFeedbackSubmitLoading(true);
     try {
       await axios.post(
-        '/api/feedback',
+        '/api/user/feedback',
         {
           user_recipient_id: id,
           user_writer_id: userId,
@@ -66,6 +87,7 @@ export default function UserProfilePage() {
       setFeedbackRating(5);
       setFeedbackSuccess('Отзыв добавлен!');
       fetchFeedbacks();
+      fetchUser(); // обновить профиль
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setFeedbackError(err.response.data.message);
@@ -84,10 +106,14 @@ export default function UserProfilePage() {
     if (!window.confirm('Удалить этот отзыв?')) return;
     try {
       await axios.delete(
-        `/api/feedback/${feedbackId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `/api/user/feedback/${feedbackId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          data: {} // axios требует data для DELETE с body, даже если пустой объект
+        }
       );
       fetchFeedbacks();
+      fetchUser(); // обновить профиль
     } catch (err) {
       alert('Ошибка удаления отзыва');
     }
@@ -116,7 +142,7 @@ export default function UserProfilePage() {
     setEditingFeedbackLoading(true);
     try {
       await axios.put(
-        `/api/feedback/${editingFeedbackId}`,
+        `/api/user/feedback/${editingFeedbackId}`,
         {
           comment: editingFeedbackText,
           rating: editingFeedbackRating,
@@ -127,6 +153,7 @@ export default function UserProfilePage() {
       setEditingFeedbackText('');
       setEditingFeedbackRating(5);
       fetchFeedbacks();
+      fetchUser(); // обновить профиль
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setEditingFeedbackError(err.response.data.message);

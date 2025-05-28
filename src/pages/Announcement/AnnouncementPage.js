@@ -51,7 +51,7 @@ export default function AnnouncementPage() {
   const fetchReviews = () => {
     if (!id) return;
     setReviewsLoading(true);
-    axios.get(`/api/feedback/announcement/${id}`)
+    axios.get(`/api/announcement/feedback/announcement/${id}`)
       .then(async res => {
         const reviewsArr = Array.isArray(res.data) ? res.data : [];
         setReviews(reviewsArr);
@@ -114,7 +114,7 @@ export default function AnnouncementPage() {
         rating: reviewRating,
       };
       await axios.post(
-        '/api/feedback',
+        '/api/announcement/feedback',
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -141,7 +141,7 @@ export default function AnnouncementPage() {
     if (!window.confirm('Удалить этот отзыв?')) return;
     try {
       await axios.delete(
-        `/api/feedback/${reviewId}`,
+        `/api/announcement/feedback/${reviewId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchReviews();
@@ -175,7 +175,7 @@ export default function AnnouncementPage() {
     try {
       // Используем PATCH вместо PUT
       await axios.patch(
-        `/api/feedback/${editingReviewId}`,
+        `/api/announcement/feedback/${editingReviewId}`,
         {
           comment: editingReviewText,
           rating: editingReviewRating,
