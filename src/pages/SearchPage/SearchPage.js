@@ -20,11 +20,13 @@ function useQuery() {
 
 export default function SearchPage() {
   const navigate = useNavigate();
-  const query = useQuery().get('q') || '';
+  const queryParams = useQuery();
+  const query = queryParams.get('q') || '';
+  const userIdParam = queryParams.get('user_id');
+  const { userId, token } = useAuth();
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { userId, token } = useAuth();
   const [cartItems, setCartItems] = useState([]);
 
   // Получить корзину для проверки наличия товара
@@ -49,8 +51,10 @@ export default function SearchPage() {
     if (!query) return;
     setError('');
     setLoading(true);
-    console.log('[SearchPage] GET /api/announcements/search?q=' + encodeURIComponent(query));
-    fetch(`/api/announcements/search?q=${encodeURIComponent(query)}`)
+    // user_id для поиска: из query-параметра или из auth, или 0
+    const effectiveUserId = userIdParam || userId || 0;
+    console.log('[SearchPage] GET /api/announcements/search/' + effectiveUserId + '?q=' + encodeURIComponent(query));
+    fetch(`/api/announcements/search/${effectiveUserId}?q=${encodeURIComponent(query)}`)
       .then(res => res.json())
       .then(data => setResults(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -58,7 +62,7 @@ export default function SearchPage() {
         console.error('[SearchPage] Ошибка поиска:', err);
       })
       .finally(() => setLoading(false));
-  }, [query]);
+  }, [query, userIdParam, userId]);
 
   // Добавить в корзину
   const handleAddToCart = async (annId) => {

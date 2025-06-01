@@ -140,11 +140,13 @@ export default function Dashboard() {
     fetchCart(); // <-- добавлено, чтобы корзина была актуальна при первом рендере
   }, [userId]);
 
+  // В handleSearchSubmit:
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const term = search.trim();
     if (term) {
-      navigate(`/search?q=${encodeURIComponent(term)}`);
+      // userId может быть null, но бек требует user_id всегда
+      navigate(`/search?q=${encodeURIComponent(term)}&user_id=${userId || 0}`);
     }
   };
 

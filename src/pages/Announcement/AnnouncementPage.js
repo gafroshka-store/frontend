@@ -35,17 +35,18 @@ export default function AnnouncementPage() {
   const [reviewAuthors, setReviewAuthors] = useState({});
   const navigate = useNavigate();
 
-  // Получение товара
-  useEffect(() => {
+  // Получение информации о товаре (используется и при открытии отзывов)
+  const fetchAnnouncement = () => {
     setLoading(true);
-    axios.get(`/api/announcement/${id}`)
+    const effectiveUserId = userId || 0;
+    axios.get(`/api/announcement/${id}/${effectiveUserId}`)
       .then(res => setAnnouncement(res.data))
       .catch(err => {
         setError('Ошибка загрузки товара');
         console.error('[AnnouncementPage] Ошибка загрузки:', err);
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  };
 
   // Получение отзывов
   const fetchReviews = () => {
@@ -76,6 +77,8 @@ export default function AnnouncementPage() {
             return next;
           });
         }
+        // После загрузки отзывов обновить информацию о товаре
+        fetchAnnouncement();
       })
       .catch(err => {
         setReviews([]);
@@ -83,6 +86,11 @@ export default function AnnouncementPage() {
       })
       .finally(() => setReviewsLoading(false));
   };
+
+  useEffect(() => {
+    fetchAnnouncement();
+    // eslint-disable-next-line
+  }, [id, userId]);
 
   useEffect(() => {
     fetchReviews();
