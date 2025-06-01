@@ -19,11 +19,7 @@ export default function ProfilePage() {
   const [form, setForm] = useState({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [balance, setBalance] = useState(null);
-  const [showTopup, setShowTopup] = useState(false);
-  const [topupAmount, setTopupAmount] = useState('');
-  const [topupError, setTopupError] = useState('');
-  const [topupLoading, setTopupLoading] = useState(false);
+  const [authorInfoMap, setAuthorInfoMap] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,21 +41,20 @@ export default function ProfilePage() {
       });
   }, [userId, token]);
 
-  // Получение баланса
-  const fetchBalance = async () => {
-    try {
-      const res = await axios.get(`/api/user/${userId}/balance`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBalance(res.data.balance);
-    } catch (err) {
-      setBalance(null);
-    }
-  };
-
   useEffect(() => {
     if (!userId) return;
-    fetchBalance();
+    const fetchAuthorInfo = async () => {
+      try {
+        const response = await axios.get(`/api/user/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAuthorInfoMap(prev => ({ ...prev, [userId]: response.data }));
+      } catch (err) {
+        console.error('Ошибка загрузки информации об авторе:', err);
+      }
+    };
+
+    fetchAuthorInfo();
   }, [userId, token]);
 
   const handleChange = e => {
@@ -94,51 +89,10 @@ export default function ProfilePage() {
     }
   };
 
-  // Пополнение баланса
-  const handleTopup = async (e) => {
-    e.preventDefault();
-    setTopupError('');
-    setTopupLoading(true);
-    try {
-      const amount = parseInt(topupAmount, 10);
-      if (!amount || amount <= 0) {
-        setTopupError('Введите сумму больше 0');
-        setTopupLoading(false);
-        return;
-      }
-      await axios.post(
-        `/api/user/${userId}/balance/topup`,
-        { amount },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setShowTopup(false);
-      setTopupAmount('');
-      fetchBalance();
-      // обновить user, если нужно
-      const res = await axios.get(`/api/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(res.data);
-      setSuccess('Баланс успешно пополнен');
-    } catch (err) {
-      setTopupError('Ошибка пополнения баланса');
-    } finally {
-      setTopupLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-
-  if (!token) {
-    return (
-      <div style={{ padding: 32, color: '#e53e3e' }}>
-        Только авторизованные пользователи могут просматривать профиль.
-      </div>
-    );
-  }
 
   if (!user) return <div style={{ padding: 32 }}>Загрузка...</div>;
 
@@ -229,26 +183,7 @@ export default function ProfilePage() {
             </li>
             <li>
               <span className="profile-info-label">Баланс:</span>
-              <span className="profile-info-value">
-                {balance !== null ? balance : user.balance}
-                <button
-                  style={{
-                    marginLeft: 12,
-                    background: '#43cea2',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    padding: '0.2rem 0.8rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    fontSize: '0.95rem'
-                  }}
-                  onClick={() => setShowTopup(true)}
-                  type="button"
-                >
-                  Пополнить
-                </button>
-              </span>
+              <span className="profile-info-value">{user.balance}</span>
             </li>
             <li>
               <span className="profile-info-label">Сделок:</span>
@@ -297,59 +232,6 @@ export default function ProfilePage() {
           <div className="profile-actions">
             <button onClick={() => setEdit(true)}>Редактировать</button>
             <button onClick={handleLogout} style={{ background: '#e53e3e' }}>Выйти</button>
-          </div>
-        )}
-        {/* Модальное окно/форма пополнения баланса */}
-        {showTopup && (
-          <div style={{
-            position: 'fixed',
-            left: 0, top: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.25)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <form
-              onSubmit={handleTopup}
-              style={{
-                background: '#fff',
-                borderRadius: 12,
-                padding: 24,
-                minWidth: 280,
-                boxShadow: '0 4px 24px rgba(67,206,162,0.13)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12
-              }}
-            >
-              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Пополнить баланс</div>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                value={topupAmount}
-                onChange={e => setTopupAmount(e.target.value)}
-                placeholder="Сумма"
-                style={{ fontSize: 16, borderRadius: 6, border: '1px solid #e2e8f0', padding: 8 }}
-                required
-              />
-              {topupError && <div style={{ color: '#e53e3e', fontSize: 15 }}>{topupError}</div>}
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button
-                  type="submit"
-                  disabled={topupLoading}
-                  style={{ background: '#43cea2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 600 }}
-                >
-                  {topupLoading ? 'Пополнение...' : 'Пополнить'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowTopup(false); setTopupError(''); setTopupAmount(''); }}
-                  style={{ background: '#bdbdbd', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 600 }}
-                >
-                  Отмена
-                </button>
-              </div>
-            </form>
           </div>
         )}
       </div>
