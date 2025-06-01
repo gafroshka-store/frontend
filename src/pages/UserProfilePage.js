@@ -270,11 +270,10 @@ export default function UserProfilePage() {
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600, color: '#185a9d' }}>
                         <span style={{ flex: 1 }}>
-                          {/* Можно добавить имя автора, если нужно, через отдельный запрос */}
                           {fb.user_writer_id === userId ? 'Вы' : `Пользователь: ${fb.user_writer_id}`}
                         </span>
                         <span style={{ color: '#f6c700', fontWeight: 700 }}>{fb.rating} ★</span>
-                        {userId === fb.user_writer_id && editingFeedbackId !== fb.feedback_id && (
+                        {token && userId === fb.user_writer_id && editingFeedbackId !== fb.feedback_id && (
                           <>
                             <button
                               style={{ background: 'transparent', border: 'none', color: '#e53e3e', fontSize: '1.1rem', cursor: 'pointer', marginLeft: 8, fontWeight: 700 }}
@@ -290,39 +289,43 @@ export default function UserProfilePage() {
                         )}
                       </div>
                       {editingFeedbackId === fb.feedback_id ? (
-                        <form onSubmit={handleUpdateFeedback} style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          <textarea
-                            value={editingFeedbackText}
-                            onChange={e => setEditingFeedbackText(e.target.value)}
-                            required
-                            rows={2}
-                            maxLength={500}
-                            style={{ borderRadius: 8, border: '1px solid #e2e8f0', padding: 8, fontSize: 16 }}
-                          />
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
-                            <label>
-                              Оценка:&nbsp;
-                              <select
-                                value={editingFeedbackRating}
-                                onChange={e => setEditingFeedbackRating(Number(e.target.value))}
-                                style={{ fontSize: 16, borderRadius: 6, border: '1px solid #e2e8f0', padding: '2px 10px', marginLeft: 4 }}
-                              >
-                                {[5, 4, 3, 2, 1].map(n => (
-                                  <option key={n} value={n}>{n} ★</option>
-                                ))}
-                              </select>
-                            </label>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button type="submit" disabled={editingFeedbackLoading || !editingFeedbackText.trim()} style={{ background: '#43cea2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 600 }}>
-                                {editingFeedbackLoading ? 'Сохранение...' : 'Сохранить'}
-                              </button>
-                              <button type="button" onClick={handleCancelEditFeedback} style={{ background: '#bdbdbd', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 600 }}>
-                                Отмена
-                              </button>
+                        token ? (
+                          <form onSubmit={handleUpdateFeedback} style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <textarea
+                              value={editingFeedbackText}
+                              onChange={e => setEditingFeedbackText(e.target.value)}
+                              required
+                              rows={2}
+                              maxLength={500}
+                              style={{ borderRadius: 8, border: '1px solid #e2e8f0', padding: 8, fontSize: 16 }}
+                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
+                              <label>
+                                Оценка:&nbsp;
+                                <select
+                                  value={editingFeedbackRating}
+                                  onChange={e => setEditingFeedbackRating(Number(e.target.value))}
+                                  style={{ fontSize: 16, borderRadius: 6, border: '1px solid #e2e8f0', padding: '2px 10px', marginLeft: 4 }}
+                                >
+                                  {[5, 4, 3, 2, 1].map(n => (
+                                    <option key={n} value={n}>{n} ★</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button type="submit" disabled={editingFeedbackLoading || !editingFeedbackText.trim()} style={{ background: '#43cea2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 600 }}>
+                                  {editingFeedbackLoading ? 'Сохранение...' : 'Сохранить'}
+                                </button>
+                                <button type="button" onClick={handleCancelEditFeedback} style={{ background: '#bdbdbd', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 18px', fontWeight: 600 }}>
+                                  Отмена
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          {editingFeedbackError && <div style={{ color: '#e53e3e', marginTop: 4, textAlign: 'center' }}>{editingFeedbackError}</div>}
-                        </form>
+                            {editingFeedbackError && <div style={{ color: '#e53e3e', marginTop: 4, textAlign: 'center' }}>{editingFeedbackError}</div>}
+                          </form>
+                        ) : (
+                          <div style={{ margin: '8px 0 0 0', color: '#222', fontSize: 16 }}>{fb.comment}</div>
+                        )
                       ) : (
                         <div style={{ margin: '8px 0 0 0', color: '#222', fontSize: 16 }}>{fb.comment}</div>
                       )}

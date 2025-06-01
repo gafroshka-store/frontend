@@ -72,6 +72,13 @@ export default function EditAnnouncementPage() {
 
   if (error) return <div className="error-message">{error}</div>;
   if (!form) return <div className="announcement-loading">Загрузка...</div>;
+  if (!token) {
+    return (
+      <div className="create-announcement-container">
+        <div className="error-message">Только авторизованные пользователи могут редактировать товары.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="create-announcement-container">

@@ -164,12 +164,14 @@ export default function Dashboard() {
           />
           <button type="submit" className="dashboard-search-btn">🔍</button>
         </form>
-        <button
-          className="dashboard-create-btn"
-          onClick={() => navigate('/announcement/create')}
-        >
-          + Новый товар
-        </button>
+        {token && (
+          <button
+            className="dashboard-create-btn"
+            onClick={() => navigate('/announcement/create')}
+          >
+            + Новый товар
+          </button>
+        )}
         <button
           className="dashboard-refresh-btn"
           onClick={fetchTop}
@@ -177,12 +179,14 @@ export default function Dashboard() {
         >
           ⟳
         </button>
-        <button
-          className="dashboard-profile-btn"
-          onClick={() => navigate('/profile')}
-        >
-          Профиль
-        </button>
+        {token && (
+          <button
+            className="dashboard-profile-btn"
+            onClick={() => navigate('/profile')}
+          >
+            Профиль
+          </button>
+        )}
       </div>
 
       <h1 className="dashboard-title">Топ-10 товаров</h1>
@@ -237,20 +241,22 @@ export default function Dashboard() {
                   >
                     Отзывы
                   </button>
-                  <button
-                    className="dashboard-profile-btn"
-                    style={{
-                      background: inCart ? '#e53e3e' : '#43cea2',
-                      cursor: inCart ? 'not-allowed' : 'pointer'
-                    }}
-                    onClick={() => {
-                      if (!inCart) handleAddToCart(a.id);
-                    }}
-                    title={inCart ? 'Уже в корзине' : 'Добавить в корзину'}
-                    disabled={inCart}
-                  >
-                    🛒
-                  </button>
+                  {token && (
+                    <button
+                      className="dashboard-profile-btn"
+                      style={{
+                        background: inCart ? '#e53e3e' : '#43cea2',
+                        cursor: inCart ? 'not-allowed' : 'pointer'
+                      }}
+                      onClick={() => {
+                        if (!inCart) handleAddToCart(a.id);
+                      }}
+                      title={inCart ? 'Уже в корзине' : 'Добавить в корзину'}
+                      disabled={inCart}
+                    >
+                      🛒
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -262,29 +268,31 @@ export default function Dashboard() {
         )}
       </div>
       {/* Кнопка корзины внизу */}
-      <button
-        style={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 1001,
-          background: '#185a9d',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '50%',
-          width: 56,
-          height: 56,
-          fontSize: 28,
-          boxShadow: '0 4px 16px rgba(24,90,157,0.15)',
-          cursor: 'pointer'
-        }}
-        onClick={handleOpenCart}
-        title="Корзина"
-      >
-        🛒
-      </button>
+      {token && (
+        <button
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1001,
+            background: '#185a9d',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '50%',
+            width: 56,
+            height: 56,
+            fontSize: 28,
+            boxShadow: '0 4px 16px rgba(24,90,157,0.15)',
+            cursor: 'pointer'
+          }}
+          onClick={handleOpenCart}
+          title="Корзина"
+        >
+          🛒
+        </button>
+      )}
       {/* Модальное окно корзины */}
-      {cartOpen && (
+      {token && cartOpen && (
         <div style={{
           position: 'fixed',
           left: 0, top: 0, right: 0, bottom: 0,

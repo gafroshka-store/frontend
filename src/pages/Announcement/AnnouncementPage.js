@@ -138,6 +138,7 @@ export default function AnnouncementPage() {
 
   // Удаление отзыва
   const handleDeleteReview = async (reviewId) => {
+    if (!token) return; // запрет для гостей
     if (!window.confirm('Удалить этот отзыв?')) return;
     try {
       await axios.delete(
@@ -153,6 +154,7 @@ export default function AnnouncementPage() {
 
   // Начать редактирование отзыва
   const handleEditReview = (review) => {
+    if (!token) return; // запрет для гостей
     setEditingReviewId(review.id);
     setEditingReviewText(review.comment);
     setEditingReviewRating(review.rating);
@@ -272,7 +274,7 @@ export default function AnnouncementPage() {
                             : ''}
                         </span>
                         <span className="review-rating">{r.rating} ★</span>
-                        {userId === r.user_writer_id && editingReviewId !== r.id && (
+                        {token && userId === r.user_writer_id && editingReviewId !== r.id && (
                           <>
                             <button
                               className="review-delete-btn"
@@ -289,37 +291,41 @@ export default function AnnouncementPage() {
                         )}
                       </div>
                       {editingReviewId === r.id ? (
-                        <form className="review-form" onSubmit={handleUpdateReview}>
-                          <textarea
-                            value={editingReviewText}
-                            onChange={e => setEditingReviewText(e.target.value)}
-                            required
-                            rows={2}
-                            maxLength={500}
-                          />
-                          <div className="review-form-bottom">
-                            <label>
-                              Оценка:&nbsp;
-                              <select
-                                value={editingReviewRating}
-                                onChange={e => setEditingReviewRating(Number(e.target.value))}
-                              >
-                                {[5, 4, 3, 2, 1].map(n => (
-                                  <option key={n} value={n}>{n} ★</option>
-                                ))}
-                              </select>
-                            </label>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button type="submit" disabled={editingReviewLoading || !editingReviewText.trim()}>
-                                {editingReviewLoading ? 'Сохранение...' : 'Сохранить'}
-                              </button>
-                              <button type="button" onClick={handleCancelEditReview} style={{ background: '#bdbdbd' }}>
-                                Отмена
-                              </button>
+                        token ? (
+                          <form className="review-form" onSubmit={handleUpdateReview}>
+                            <textarea
+                              value={editingReviewText}
+                              onChange={e => setEditingReviewText(e.target.value)}
+                              required
+                              rows={2}
+                              maxLength={500}
+                            />
+                            <div className="review-form-bottom">
+                              <label>
+                                Оценка:&nbsp;
+                                <select
+                                  value={editingReviewRating}
+                                  onChange={e => setEditingReviewRating(Number(e.target.value))}
+                                >
+                                  {[5, 4, 3, 2, 1].map(n => (
+                                    <option key={n} value={n}>{n} ★</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button type="submit" disabled={editingReviewLoading || !editingReviewText.trim()}>
+                                  {editingReviewLoading ? 'Сохранение...' : 'Сохранить'}
+                                </button>
+                                <button type="button" onClick={handleCancelEditReview} style={{ background: '#bdbdbd' }}>
+                                  Отмена
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          {editingReviewError && <div className="review-error">{editingReviewError}</div>}
-                        </form>
+                            {editingReviewError && <div className="review-error">{editingReviewError}</div>}
+                          </form>
+                        ) : (
+                          <div className="review-text">{r.comment}</div>
+                        )
                       ) : (
                         <>
                           <div className="review-text">{r.comment}</div>

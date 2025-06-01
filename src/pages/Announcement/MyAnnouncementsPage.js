@@ -48,6 +48,14 @@ export default function MyAnnouncementsPage() {
     }
   };
 
+  if (!token) {
+    return (
+      <div className="dashboard-container">
+        <div className="dashboard-error">Только авторизованные пользователи могут просматривать свои товары.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">

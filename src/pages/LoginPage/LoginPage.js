@@ -62,6 +62,14 @@ export default function LoginPage() {
         <button type="submit" className="login-button">
           Войти
         </button>
+        <button
+          type="button"
+          className="login-button"
+          style={{ background: '#43cea2', marginTop: 8 }}
+          onClick={() => navigate('/dashboard')}
+        >
+          Войти как гость
+        </button>
         <div style={{ marginTop: '1rem', textAlign: 'center' }}>
           Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
         </div>

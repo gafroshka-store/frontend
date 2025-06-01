@@ -70,6 +70,14 @@ export default function CreateAnnouncementPage() {
     }
   };
 
+  if (!token) {
+    return (
+      <div className="create-announcement-container">
+        <div className="error-message">Только авторизованные пользователи могут создавать товары.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="create-announcement-container">
       <form className="create-announcement-form" onSubmit={handleSubmit}>

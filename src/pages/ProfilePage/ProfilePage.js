@@ -132,6 +132,14 @@ export default function ProfilePage() {
     navigate('/login');
   };
 
+  if (!token) {
+    return (
+      <div style={{ padding: 32, color: '#e53e3e' }}>
+        Только авторизованные пользователи могут просматривать профиль.
+      </div>
+    );
+  }
+
   if (!user) return <div style={{ padding: 32 }}>Загрузка...</div>;
 
   const handleCreateAnnouncement = () => {
