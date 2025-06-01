@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../Dashboard.css';
+import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
 
 const categoryMap = {
   1: 'Электроника',
@@ -22,6 +24,26 @@ export default function SearchPage() {
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { userId, token } = useAuth();
+  const [cartItems, setCartItems] = useState([]);
+
+  // Получить корзину для проверки наличия товара
+  const fetchCart = async () => {
+    if (!userId) return;
+    try {
+      const res = await axios.get(`/api/cart/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCartItems(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setCartItems([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+    // eslint-disable-next-line
+  }, [userId]);
 
   useEffect(() => {
     if (!query) return;
@@ -37,6 +59,22 @@ export default function SearchPage() {
       })
       .finally(() => setLoading(false));
   }, [query]);
+
+  // Добавить в корзину
+  const handleAddToCart = async (annId) => {
+    if (!userId) return;
+    try {
+      await axios.post(`/api/cart/${userId}/item/${annId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchCart();
+    } catch {
+      alert('Ошибка добавления в корзину');
+    }
+  };
+
+  // Проверка: находится ли товар в корзине
+  const isInCart = (annId) => cartItems.some(item => item.id === annId);
 
   return (
     <div className="dashboard-container">
@@ -58,6 +96,7 @@ export default function SearchPage() {
           const discountedPrice = hasDiscount
             ? Math.round(a.price * (1 - a.discount / 100))
             : a.price;
+          const inCart = isInCart(a.id);
           return (
             <div className="dashboard-card" key={a.id}>
               <div className="dashboard-card-header">
@@ -96,6 +135,20 @@ export default function SearchPage() {
                   onClick={() => navigate(`/announcement/${a.id}`)}
                 >
                   Отзывы
+                </button>
+                <button
+                  className="dashboard-profile-btn"
+                  style={{
+                    background: inCart ? '#e53e3e' : '#43cea2',
+                    cursor: inCart ? 'not-allowed' : 'pointer'
+                  }}
+                  onClick={() => {
+                    if (!inCart) handleAddToCart(a.id);
+                  }}
+                  title={inCart ? 'Уже в корзине' : 'Добавить в корзину'}
+                  disabled={inCart}
+                >
+                  🛒
                 </button>
               </div>
             </div>

@@ -210,6 +210,9 @@ export default function AnnouncementPage() {
     ? Math.round(announcement.price * (1 - announcement.discount / 100))
     : announcement.price;
 
+  // Можно ли оставить отзыв (не на свой товар)
+  const isOwnAnnouncement = announcement && userId && announcement.user_seller_id === userId;
+
   return (
     <div className="announcement-view-container">
       <button className="announcement-back-btn" onClick={() => navigate(-1)}>Назад</button>
@@ -329,7 +332,7 @@ export default function AnnouncementPage() {
               )
           }
           {/* Добавить отзыв */}
-          {token && !editingReviewId && (
+          {token && !editingReviewId && !isOwnAnnouncement && (
             <form className="review-form" onSubmit={handleReviewSubmit}>
               <textarea
                 value={reviewText}
@@ -358,6 +361,12 @@ export default function AnnouncementPage() {
               {reviewError && <div className="review-error">{reviewError}</div>}
               {reviewSuccess && <div className="review-success">{reviewSuccess}</div>}
             </form>
+          )}
+          {/* Сообщение если пытается оставить отзыв на свой товар */}
+          {token && !editingReviewId && isOwnAnnouncement && (
+            <div className="review-error" style={{ marginTop: 12 }}>
+              Нельзя оставлять отзыв на свой товар
+            </div>
           )}
         </div>
       </div>
